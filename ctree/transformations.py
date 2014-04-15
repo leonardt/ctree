@@ -186,3 +186,4 @@ class ResolveGeneratedPathRefs(NodeTransformer):
     def visit_GeneratedPathRef(self, node):
         self.count += 1
         return String(os.path.join(self.compilation_dir, node.target.get_filename()))
+

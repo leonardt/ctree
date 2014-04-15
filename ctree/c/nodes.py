@@ -11,7 +11,9 @@ log = logging.getLogger(__name__)
 
 from ctree.nodes import CtreeNode, File
 from ctree.util import singleton, highlight
+from ctree.visitors import NodeTransformer
 
+from copy import deepcopy
 
 class CNode(CtreeNode):
     """Base class for all C nodes in ctree."""
@@ -136,12 +138,52 @@ class For(Statement):
         self.test = test
         self.incr = incr
         self.body = body
+        self.unroll_factor = 1
         super(For, self).__init__()
 
+    def mark_for_unroll(self, factor):
+        self.unroll_factor = factor
 
-# class Define(Statement):
-# mbd: deprecated. see ctree.cpp.nodes.CppDefine
+    def _unroll(self):
+        init = self.init.right.value
+        end = self.test.right.value
+        # TODO: We need to seperate Lt vs LtE logic
+        leftover_begin = int((end - init + 1) / self.unroll_factor) * self.unroll_factor + init - 1
 
+        new_end = leftover_begin
+        new_incr = AddAssign(SymbolRef(self.incr.arg.name), self.unroll_factor)
+        new_body = self.body[:]
+        for x in range(self.unroll_factor - 1):
+            new_extension = deepcopy(self.body)
+            loopvar = self.init.left.name
+            new_extension = map(self.UnrollReplacer(loopvar).visit, new_extension)
+            new_extension.insert(0, PostInc(SymbolRef(loopvar)))
+            new_body.append(new_extension)
+
+        leftover_For = For(Assign(self.init.left,
+                                  Constant(leftover_begin)),
+                           self.test,
+                           self.incr,
+                           self.body)
+
+        self.test = Lt(self.init.left.name, new_end)
+        self.incr = new_incr
+        self.body = new_body
+
+        if leftover_begin < end:
+            return leftover_For
+
+    class UnrollReplacer(NodeTransformer):
+        def __init__(self, loopvar):
+            self.loopvar = loopvar
+            self.in_new_scope = False
+            self.inside_for = False
+            super(For.UnrollReplacer, self).__init__()
+
+        def visit_SymbolRef(self, node):
+            if node.name != self.loopvar:
+                return SymbolRef(node.name)
+            return node
 
 class FunctionCall(Expression):
     """Cite me."""
