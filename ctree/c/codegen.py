@@ -126,7 +126,10 @@ class CCodeGen(CodeGenVisitor):
         if node.unroll_factor > 1:
             leftover = node._unroll()
             if leftover is not None:
-                leftover = ";\n%sfor (%s; %s; %s) %s" % (self._tab(), leftover.init, leftover.test, leftover.incr, self._genblock(leftover.body))
+                leftover = ";\n%sfor (%s; %s; %s) %s" % (
+                    self._tab(), leftover.init, leftover.test, leftover.incr,
+                    self._genblock(leftover.body)
+                )
             else:
                 leftover = ""
         body = self._genblock(node.body)

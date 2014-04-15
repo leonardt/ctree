@@ -147,8 +147,10 @@ class For(Statement):
     def _unroll(self):
         init = self.init.right.value
         end = self.test.right.value
+
         # TODO: We need to seperate Lt vs LtE logic
-        leftover_begin = int((end - init + 1) / self.unroll_factor) * self.unroll_factor + init - 1
+        leftover_begin = int((end - init + 1) / self.unroll_factor) *\
+            self.unroll_factor + init - 1
 
         new_end = leftover_begin
         new_incr = AddAssign(SymbolRef(self.incr.arg.name), self.unroll_factor)
@@ -156,7 +158,8 @@ class For(Statement):
         for x in range(self.unroll_factor - 1):
             new_extension = deepcopy(self.body)
             loopvar = self.init.left.name
-            new_extension = map(self.UnrollReplacer(loopvar).visit, new_extension)
+            new_extension = map(self.UnrollReplacer(loopvar).visit,
+                                new_extension)
             new_extension.insert(0, PostInc(SymbolRef(loopvar)))
             new_body.append(new_extension)
 
