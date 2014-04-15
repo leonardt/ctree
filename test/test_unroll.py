@@ -22,7 +22,7 @@ class TestUnroll(unittest.TestCase):
                            PostInc(SymbolRef('x')),
                            AddAssign(SymbolRef('z'), Mul(Constant(2), SymbolRef('x')))
                        ])
-        actual.mark_for_unroll(2)
+        actual.unroll(2)
         self._check(actual, expected)
 
     def test_leftover_unroll(self):
@@ -54,5 +54,5 @@ class TestUnroll(unittest.TestCase):
                                [AddAssign(SymbolRef('z', Int()), Mul(Constant(2), SymbolRef('x')))]
                                )
                        ])
-        actual.body[0].mark_for_unroll(2)
+        actual.body[0].unroll(2)
         self._check(actual, expected)
