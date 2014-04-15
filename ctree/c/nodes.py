@@ -158,8 +158,8 @@ class For(Statement):
         for x in range(self.unroll_factor - 1):
             new_extension = deepcopy(self.body)
             loopvar = self.init.left.name
-            new_extension = map(self.UnrollReplacer(loopvar).visit,
-                                new_extension)
+            new_extension = list(map(self.UnrollReplacer(loopvar).visit,
+                                new_extension))
             new_extension.insert(0, PostInc(SymbolRef(loopvar)))
             new_body.append(new_extension)
 
