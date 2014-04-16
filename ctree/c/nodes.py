@@ -144,12 +144,13 @@ class For(Statement):
         init = self.init.right.value
         end = self.test.right.value
 
-        # TODO: We need to seperate Lt vs LtE logic
         leftover_begin = int((end - init + 1) / factor) *\
-            factor + init - 1
+            factor + init
+        if isinstance(self.test.op, Op.Lt):
+            leftover_begin -= 1
 
         new_end = leftover_begin
-        new_incr = AddAssign(SymbolRef(self.incr.arg.name), factor)
+        new_incr = AddAssign(SymbolRef(self.init.left.name), factor)
         new_body = self.body[:]
         for x in range(factor - 1):
             new_extension = deepcopy(self.body)
