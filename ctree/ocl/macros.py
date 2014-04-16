@@ -43,6 +43,9 @@ def get_local_id(id):
 def get_global_id(id):
     return FunctionCall(SymbolRef('get_global_id'), [Constant(id)])
 
+def get_group_id(id):
+    return FunctionCall(SymbolRef('get_group_id'), [Constant(id)])
+
 def get_local_size(id):
     return FunctionCall(SymbolRef('get_local_size'), [Constant(id)])
 
