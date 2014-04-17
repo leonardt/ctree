@@ -70,7 +70,8 @@ class OpTranslator(LazySpecializedFunction):
             'kernel_path': kernel.get_generated_path_ref(),
             'kernel_name': String(apply_kernel.name),
         }
-        template_path = os.path.join(os.getcwd(), "templates", "OclDoubler.tmpl.c")
+        template_path = os.path.join(os.getcwd(), "examples", "templates",
+                                     "OclDoubler.tmpl.c")
 
         control = CFile("control", [
             FileTemplate(template_path, template_args),
