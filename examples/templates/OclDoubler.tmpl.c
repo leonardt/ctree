@@ -6,7 +6,11 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef __APPLE__
 #include <OpenCL/opencl.h>
+#else
+#include <CL/cl.h>
+#endif
 
 int apply_all($array_decl)
 {
@@ -24,11 +28,34 @@ int apply_all($array_decl)
 
     cl_mem device_data;                       // device memory used for the data array
 
-    // Connect to a compute device
-    //
-    int gpu = 1;
-    err = clGetDeviceIDs(NULL, gpu ? CL_DEVICE_TYPE_GPU : CL_DEVICE_TYPE_CPU, 1, &device_id, NULL);
+    // Find number of platforms
+    cl_uint num_platforms;
+
+    err = clGetPlatformIDs(0, NULL, &num_platforms);
+    if (err != CL_SUCCESS || num_platforms <= 0)
+    {
+        printf("Error: Could not find a platform!\n");
+        return err;
+    }
+
+    // Get all platforms
+    cl_platform_id platforms[num_platforms];
+
+    err = clGetPlatformIDs(num_platforms, platforms, NULL);
     if (err != CL_SUCCESS)
+    {
+        printf("Error: Failed to get all platforms!\n");
+        return err;
+    }
+
+    // Secure a device
+    for (int i = 0; i < num_platforms; i++)
+    {
+        err = clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_DEFAULT, 1, &device_id, NULL);
+        if (err == CL_SUCCESS)
+            break;
+    }
+    if (device_id == NULL)
     {
         printf("Error: Failed to create a device group!\n");
         return err;
@@ -66,8 +93,7 @@ int apply_all($array_decl)
 
     // Allocate memory to hold kernel
     //
-    char *KernelSource = malloc(kernelFileSize*sizeof(char));
-    memset(KernelSource, 0, kernelFileSize);
+    char *KernelSource = (char *)calloc(sizeof(char), kernelFileSize);
     if (KernelSource == NULL) {
         printf("Error: failed to allocate memory to hold kernel text.\n");
         return err;
